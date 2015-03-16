@@ -41,7 +41,7 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
   #                   - fileName: string: name of the file to read from. If using file path, watch out file separator on Windows/Unix worlds
   #               output: 
   #                   - boolean: FALSE indicates the file does not exist (an error message is printed out)
-  checkFileExistance(fileName){
+  checkFileExistance = function(fileName){
     if (!file.exists(targetFileName)){
       cat("\t\tUnable to locate file '"+fileName+"'. Aborting analysis!\n")
       return(FALSE)
