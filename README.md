@@ -9,14 +9,20 @@ In order to correctly output the desire results, Samsung data (*UCI HAR Dataset.
 ```
 - activity_labels.txt
 - features.txt
-- [test]
+- [test]   => Tests related observations
    [Inertial Signals] (optional)
-   subject_test.txt
-   X_test.txt
-   Y_test.txt
-- [train]
+   subject_test.txt => Individual for whom the measures are made 
+   X_test.txt => Measured features
+   Y_test.txt => Run activities
+- [train]   => train related observations
    [Inertial Signals] (optional)
-   subject_train.txt
-   X_train.txt
-   Y_train.txt
+   subject_train.txt => Individual for whom the measures are made
+   X_train.txt => Measured features
+   Y_train.txt  => Run activities
 ```
+
+The **run_analysis.R** *R script* output is made of two file located at the root of the working directory (the directory where this *R Script* is located), and are the following:
+````
+First
+Second
+````
