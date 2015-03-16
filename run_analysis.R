@@ -11,8 +11,9 @@
 
 
 # Loading helpful libraries
-library(gdata)  # Trim function
-library(utils)  # read.table function
+library(gdata)      # trim function
+library(utils)      # read.table function
+library(reshape2)   # Reshaping data.frame functions
 
 #
 # Given a kind of wanted observation return a data frame with tidy data
@@ -132,12 +133,12 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
   # 4. Read feature names (features.txt) 
   cat("\t4.Reading feature names from '"+fFileName+"' file.\n")
   if (!checkFileExistance(fFileName)) return(NULL)
-  featureNames = read.table(fFileName, col.names=c("featureIdx","featureLabel"))
-  if (is.null(featureNames)){
+  features = read.table(fFileName, col.names=c("idx","name"))
+  if (is.null(features)){
     cat("\t\t'"+fFileName+"' does not contains any value. Aborting analysis!\n")
     return(NULL)
   }
-  nrFeatures = nrow(featuresNames)
+  nrFeatures = nrow(features)
   cat("\t\t Numbers of named features: ", nrFeatures, "\n")
   cat("\n")
   
@@ -147,21 +148,31 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
   #         b. Check that we have the same number of observation according to the number of features
   #         c. Transform the Vector to a data.frame
   cat("\t5.Reading observed features from '"+xFileName+"' file.\n")
-  dirtyMeasuredFeatures = getDataVectorFromTextFile(xFileName)
-  if (is.null(dirtyMeasuredFeatures)) return(NULL)
+  dirtyObservedFeatures = getDataVectorFromTextFile(xFileName)
+  if (is.null(dirtyObservedFeatures)) return(NULL)
   # a. Clean the retrieved measured features
-  tidyMeasuredFeatures = cleanFeaturesObs(dirtyMeasuredFeatures)
-  rm(dirtyMeasuredFeatures) # save memory by removing dirtyMeasuresFeatures
+  cleanObservedFeatures = cleanFeaturesObs(dirtyObservedFeatures)
+  rm(dirtyObservedFeatures) # save memory by removing dirtyMeasuresFeatures
   # b. Check that we have the same number of observation (according to the number of features)
   #     As a reminder, the total number (length of our vector) should be equal to the number
   #     of observations (either Subject set or Activity set) times the number of features
-  if (length(tidyMeasuredFeatures)!=nrSubjectObs*nrFeatures){
-    cat("\t\tFound ",length(tidyMeasuredFeatures)," measures, which does not equal ",nrSubjectObs,"x",nrFeatures,".")
+  if (length(cleanObservedFeatures)!=nrSubjectObs*nrFeatures){
+    cat("\t\tFound ",length(cleanObservedFeatures)," measures, which does not equal ",nrSubjectObs,"x",nrFeatures,".")
     cat("Aborting Analysis!")
     return(NULL)
   }
   # c. Transform the Vector to a data.frame
-  tidyDF = data.frame(matrix(as.numeric(tidyMeasuredFeatures), nrow=nrSubjectObs))
+  tmpDF = data.frame(matrix(as.numeric(cleanObservedFeatures), nrow=nrSubjectObs))
+  # d. Retrieving desired feature names and indices
+  filteredFeatures = featureNames[grepl(featToRetrieve,features$name),]
+  # e. Building the tidy filtered dataframe and associate the variable names
+  tidyDF = data.frame()
+  for ( i in 1:nrow(filteredFeatures) ){
+    tidyDF = cbind(tidyDF, tmpDF[,filteredFeatures[i]$idx])
+  }
+  colnames(tidyDF) = filteredFeatures$name
   
   
+  
+  return(tidyDF)
 }
