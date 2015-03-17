@@ -213,4 +213,8 @@ cat("\tThe final tidy data set is called 'tidyMeasuresDF' is has",ncol(tidyMeasu
 rm(testDF, trainDF)
 
 
-# dcast(measures, activity + subject ~ ..., mean, value.var=colnames(measures)[3:])
+# dcast(measures, activity + subject ~ ..., mean, value.var=colnames(measures)[-c(1,2)])
+# dcast(m, activity ~ subject, mean)
+# dcast(m, activity + subject ~ ..., mean)
+
+#z=group_by(m, subject, activity)
