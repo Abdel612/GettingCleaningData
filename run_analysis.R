@@ -80,7 +80,7 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
     return(unlist(strsplit(trim(obsV),"\\s+")))
   }
   
-  
+   
   
   #
   # Main routine

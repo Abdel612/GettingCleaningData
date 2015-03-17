@@ -1,7 +1,7 @@
 Coursera Getting & Cleaning Data Project
 -----------------------------------------------------------------
 This project is meant to serve as the submission work to validate the Coursera "Getting and Cleaning Data" MOOC
-
+ 
 #Requirements
 ## Directory structure
 In order to correctly output the desire results, Samsung data file (*UCI HAR Dataset.zip*) should be located (unzipped) in the directory where **run_analysis.R** *R script* is located, hence we should have the following directory/file tree ([d]=directory):
