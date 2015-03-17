@@ -15,6 +15,7 @@ library(gdata)      # trim function
 library(utils)      # read.table function
 library(reshape2)   # Reshaping data.frame functions
 library(stats)      # xtabs function
+library(dplyr)      # melting function
 
 #
 # Given a kind of wanted observation return a data frame with tidy data
@@ -201,20 +202,24 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
 #
 ##
 
-cat("\n*** Compute the final tidy data set .***\n\n")
+cat("\n****** Compute project's final tidy data sets. ******\n\n")
 # Get a tidy data set from train observations
 trainDF=getActivityObservations("-mean|-std","train/X_train.txt","train/y_train.txt","train/subject_train.txt")
 # Get a tidy data set from test observations
 testDF=getActivityObservations("-mean|-std","test/X_test.txt","test/y_test.txt","test/subject_test.txt", obsType="test")
 # Compute the final
-tidyMeasuresDF=rbind(trainDF,testDF)
-cat("\tThe final tidy data set is called 'tidyMeasuresDF' is has",ncol(tidyMeasuresDF),"columns and",nrow(tidyMeasuresDF),".\n")
+tidyMeasures=rbind(trainDF,testDF)
+cat("\tThe final tidy data set is called 'tidyMeasures' and has",ncol(tidyMeasures),"columns and",nrow(tidyMeasures),"cols.\n")
 # Get ride of temporary variables
 rm(testDF, trainDF)
 
+# Compute the data set handling the average of each variable for each activity and each subject 
+tmpMelt=melt(tidyMeasures, id.vars=c("subject","activity"), measures.vars=names(tidyMeasures)[-c(1,2)])
+avgMeasureByActAndBySubject=dcast(tmpMelt, subject + activity ~ variable, mean)
+cat("\tThe data set handling mean values by subject and by activity is called 'avgMeasureByActAndBySubject'.\n")
+# Get ride of temporary variables
+rm(tmpMelt)
 
-# dcast(measures, activity + subject ~ ..., mean, value.var=colnames(measures)[-c(1,2)])
-# dcast(m, activity ~ subject, mean)
-# dcast(m, activity + subject ~ ..., mean)
+# Finally, write the avgMeasureByActAndBySubject to a file named 'avgMeasureByActAndBySubject.txt' in the current working directory
+write.table(avgMeasureByActAndBySubject,file="avgMeasureByActAndBySubject.txt",row.names=FALSE)
 
-#z=group_by(m, subject, activity)
