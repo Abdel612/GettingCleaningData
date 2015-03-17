@@ -14,6 +14,7 @@
 library(gdata)      # trim function
 library(utils)      # read.table function
 library(reshape2)   # Reshaping data.frame functions
+library(stats)      # xtabs function
 
 #
 # Given a kind of wanted observation return a data frame with tidy data
@@ -84,7 +85,7 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
   # Main routine
   #
   
-  cat("***Engineering '",toupper(obsType),"' observations.***\n")
+  cat("*** Engineering '",toupper(obsType),"' observations. ***\n")
   
   
   # 1. Read involved individuals IDs (subject_[train|test].txt)
@@ -101,6 +102,7 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
   cat("\t2.Reading activity IDs from '",yFileName,"' file.\n")
   activitiesID = getDataVectorFromTextFile(yFileName)
   if (is.null(activitiesID)) return(NULL)
+  activitiesID=as.numeric(activitiesID)
   nrYObs = length(activitiesID)
   cat("\t\tNumbers of observations recorded: ", nrYObs, "\n")
   if ( nrYObs != nrSubjectObs ){
@@ -133,7 +135,7 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
   # 4. Read feature names (features.txt) 
   cat("\t4.Reading feature names from '",fFileName,"' file.\n")
   if (!checkFileExistance(fFileName)) return(NULL)
-  features = read.table(fFileName, col.names=c("idx","name"))
+  features = read.table(fFileName, col.names=c("idx","name"), as.is=c(TRUE,TRUE), colClasses=c("integer", "character"))
   if (is.null(features)){
     cat("\t\t'",fFileName,"' does not contains any value. Aborting analysis!\n")
     return(NULL)
@@ -147,6 +149,11 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
   #    then a. Clean them up
   #         b. Check that we have the same number of observation according to the number of features
   #         c. Transform the Vector to a data.frame
+  #         d. Retrieving desired feature names and indices
+  #         e. Building the tidy filtered dataframe and associate the variable names
+  #         f. Set the tidy data.frame column names for each feature
+  #         g. Add descriptive activity names column
+  #         h. Add Individuals ID column
   cat("\t5.Reading observed features from '",xFileName,"' file.\n")
   dirtyObservedFeatures = getDataVectorFromTextFile(xFileName)
   if (is.null(dirtyObservedFeatures)) return(NULL)
@@ -163,11 +170,11 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
     return(NULL)
   }
   # c. Transform the Vector to a data.frame
-  cat("\t\tCreating a temporary data.frame(ncol=",nrFeatures,", nrow=",nrSubjectObs,") to hold measures\n")
+  cat("\t\tCreating a temporary data.frame( ncol=",nrFeatures,", nrow=",nrSubjectObs,") to hold measures\n")
   tmpDF = data.frame(matrix(as.numeric(cleanObservedFeatures), ncol=nrFeatures, byrow=TRUE))  
   # d. Retrieving desired feature names and indices
   cat("\t\tFiltering measured features against '",featToRetrieve,"' regexp pattern: ")
-  filteredFeatures = features[grepl(featToRetrieve,features$name),]
+  filteredFeatures = features[grepl(featToRetrieve, features$name, ignore.case=FALSE),]
   cat(nrow(filteredFeatures)," features selected.\n")
   # e. Building the tidy filtered dataframe and associate the variable names
   cat("\t\tCreating and populating the tidy data.frame with relevant measures\n")
@@ -175,9 +182,35 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
   for ( i in 2:nrow(filteredFeatures) ){
     tidyDF = cbind(tidyDF, tmpDF[,filteredFeatures[i,]$idx])
   }
-  cat("\t\tSetting the tidy data.frame column names\n")
-  colnames(tidyDF) = filteredFeatures$name 
-  
-  cat("\n*** End of engineering '",toupper(obsType),"' observations.***\n")
+  # f. Add descriptive activity names column
+  cat("\t\tLeft inserting descriptive activity names column\n")
+  tidyDF = cbind(actLabels$activityLabel[activitiesID], tidyDF)
+  # g. Add Individuals ID column
+  cat("\t\tLeft inserting Individuals ID column\n")
+  tidyDF = cbind(subjectsID, tidyDF)
+  # h. Set the tidy data.frame column names for each feature
+  cat("\t\tSetting the tidy data.frame column names for each feature\n")
+  colnames(tidyDF) = c("subject","activity",filteredFeatures$name)
+  cat("\n*** End of engineering '",toupper(obsType),"' observations.***\n\n")
   return(tidyDF)
 }
+
+##
+#
+# Let's rock! The script execution starts here
+#
+##
+
+cat("\n*** Compute the final tidy data set .***\n\n")
+# Get a tidy data set from train observations
+trainDF=getActivityObservations("-mean|-std","train/X_train.txt","train/y_train.txt","train/subject_train.txt")
+# Get a tidy data set from test observations
+testDF=getActivityObservations("-mean|-std","test/X_test.txt","test/y_test.txt","test/subject_test.txt", obsType="test")
+# Compute the final
+tidyMeasuresDF=rbind(trainDF,testDF)
+cat("\tThe final tidy data set is called 'tidyMeasuresDF' is has",ncol(tidyMeasuresDF),"columns and",nrow(tidyMeasuresDF),".\n")
+# Get ride of temporary variables
+rm(testDF, trainDF)
+
+
+# dcast(measures, activity + subject ~ ..., mean, value.var=colnames(measures)[3:])
