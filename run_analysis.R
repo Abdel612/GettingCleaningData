@@ -34,7 +34,7 @@ library(reshape2)   # Reshaping data.frame functions
 #         - features in X_[train|test].txt file
 #         - performed activities in Y_[train|test].txt file
 #         - individuals id in subject_[train|test].txt file
-getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileName, obsKind="train", aFileName="activity_labels.txt", fFileName="features.txt"){
+getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileName, obsType="train", aFileName="activity_labels.txt", fFileName="features.txt"){
   
   # checkFileExistance: check if a file exist.
   #               input:
@@ -42,7 +42,7 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
   #               output: 
   #                   - boolean: FALSE indicates the file does not exist (an error message is printed out)
   checkFileExistance = function(fileName){
-    if (!file.exists(targetFileName)){
+    if (!file.exists(fileName)){
       cat("\t\tUnable to locate file '"+fileName+"'. Aborting analysis!\n")
       return(FALSE)
     }
@@ -59,7 +59,7 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
     if (!checkFileExistance(fileName)){
       return(NULL)
     } 
-    conn = file(targetFileName, open="r")
+    conn = file(fileName, open="r")
     tmpV = readLines(conn)
     close(conn)
     if (length(tmpV) == 0){
@@ -84,11 +84,11 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
   # Main routine
   #
   
-  print(" Engineering '"+toupper(obsType)+"' observations.")
+  cat("***Engineering '",toupper(obsType),"' observations.***\n")
   
   
   # 1. Read involved individuals IDs (subject_[train|test].txt)
-  cat("\t1.Reading individuals IDs from '"+sFileName+"' file.\n")
+  cat("\t1.Reading individuals IDs from '",sFileName,"' file.\n")
   subjectsID = getDataVectorFromTextFile(sFileName)
   if (is.null(subjectsID)) return(NULL) 
   nrSubjectObs = length(subjectsID)
@@ -98,13 +98,13 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
   
   # 2. Read performed activity id (Y_[train|test].txt) and Validate that 
   #    it holds the same number of observations as for Individual IDs
-  cat("\t2.Reading activity IDs from '"+yFileName+"' file.\n")
+  cat("\t2.Reading activity IDs from '",yFileName,"' file.\n")
   activitiesID = getDataVectorFromTextFile(yFileName)
   if (is.null(activitiesID)) return(NULL)
   nrYObs = length(activitiesID)
-  cat("\t\t Numbers of observations recorded: ", nrYObs, "\n")
+  cat("\t\tNumbers of observations recorded: ", nrYObs, "\n")
   if ( nrYObs != nrSubjectObs ){
-    cat("\t\tObservations' length differs from '"+sFileName+"' to '"+yFileName+"'. Aborting Analysis!\n")
+    cat("\t\tObservations' length differs from '",sFileName+"' to '",yFileName,"'. Aborting Analysis!\n")
     return(NULL)
   }
   observedActIDLevels = order(as.numeric(levels(factor(activitiesID))))
@@ -114,16 +114,16 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
   
   # 3. Read activity labels (activity_labels.txt) and validate that observed
   #   activiy IDs are correctly registered within this set.
-  cat("\t3.Reading activity labels from '"+aFileName+"' file.\n")
+  cat("\t3.Reading activity labels from '",aFileName,"' file.\n")
   if (!checkFileExistance(aFileName)) return(NULL)
   actLabels = read.table(aFileName, col.names=c("activityID","activityLabel"))
   if (is.null(actLabels)){
-    cat("\t\t'"+aFileName+"' does not contains any value. Aborting analysis!\n")
+    cat("\t\t'",aFileName,"' does not contains any value. Aborting analysis!\n")
     return(NULL)
   }
-  actLabelsIDLevels = order(as.numeric(levels(factor(actLables$activityID)))) 
-  cat("\t\tRegistered activities ID: ",actLabelsIDLevels,".\n")
-  if (!any(observedActIDLevels != actLabelsIDLevels)){
+  actLabelsIDLevels = order(as.numeric(levels(factor(actLabels$activityID)))) 
+  cat("\t\tRegistered activity IDs: ",actLabelsIDLevels,".\n")
+  if (any(observedActIDLevels != actLabelsIDLevels)){
     cat("\t\tThere is a mismatch between registred activity ID and observed activity ID. Aborting Analysis!\n")
     return(NULL)
   }
@@ -131,11 +131,11 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
   
 
   # 4. Read feature names (features.txt) 
-  cat("\t4.Reading feature names from '"+fFileName+"' file.\n")
+  cat("\t4.Reading feature names from '",fFileName,"' file.\n")
   if (!checkFileExistance(fFileName)) return(NULL)
   features = read.table(fFileName, col.names=c("idx","name"))
   if (is.null(features)){
-    cat("\t\t'"+fFileName+"' does not contains any value. Aborting analysis!\n")
+    cat("\t\t'",fFileName,"' does not contains any value. Aborting analysis!\n")
     return(NULL)
   }
   nrFeatures = nrow(features)
@@ -147,11 +147,12 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
   #    then a. Clean them up
   #         b. Check that we have the same number of observation according to the number of features
   #         c. Transform the Vector to a data.frame
-  cat("\t5.Reading observed features from '"+xFileName+"' file.\n")
+  cat("\t5.Reading observed features from '",xFileName,"' file.\n")
   dirtyObservedFeatures = getDataVectorFromTextFile(xFileName)
   if (is.null(dirtyObservedFeatures)) return(NULL)
   # a. Clean the retrieved measured features
   cleanObservedFeatures = cleanFeaturesObs(dirtyObservedFeatures)
+  cat("\t\tNumber of measures retrieved after cleaning:",length(cleanObservedFeatures),"\n")
   rm(dirtyObservedFeatures) # save memory by removing dirtyMeasuresFeatures
   # b. Check that we have the same number of observation (according to the number of features)
   #     As a reminder, the total number (length of our vector) should be equal to the number
@@ -162,17 +163,21 @@ getActivityObservations = function (featToRetrieve, xFileName, yFileName, sFileN
     return(NULL)
   }
   # c. Transform the Vector to a data.frame
-  tmpDF = data.frame(matrix(as.numeric(cleanObservedFeatures), nrow=nrSubjectObs))
+  cat("\t\tCreating a temporary data.frame(ncol=",nrFeatures,", nrow=",nrSubjectObs,") to hold measures\n")
+  tmpDF = data.frame(matrix(as.numeric(cleanObservedFeatures), ncol=nrFeatures, byrow=TRUE))  
   # d. Retrieving desired feature names and indices
-  filteredFeatures = featureNames[grepl(featToRetrieve,features$name),]
+  cat("\t\tFiltering measured features against '",featToRetrieve,"' regexp pattern: ")
+  filteredFeatures = features[grepl(featToRetrieve,features$name),]
+  cat(nrow(filteredFeatures)," features selected.\n")
   # e. Building the tidy filtered dataframe and associate the variable names
-  tidyDF = data.frame()
-  for ( i in 1:nrow(filteredFeatures) ){
-    tidyDF = cbind(tidyDF, tmpDF[,filteredFeatures[i]$idx])
+  cat("\t\tCreating and populating the tidy data.frame with relevant measures\n")
+  tidyDF = data.frame(tmpDF[,filteredFeatures[1,]$idx])
+  for ( i in 2:nrow(filteredFeatures) ){
+    tidyDF = cbind(tidyDF, tmpDF[,filteredFeatures[i,]$idx])
   }
-  colnames(tidyDF) = filteredFeatures$name
+  cat("\t\tSetting the tidy data.frame column names\n")
+  colnames(tidyDF) = filteredFeatures$name 
   
-  
-  
+  cat("\n*** End of engineering '",toupper(obsType),"' observations.***\n")
   return(tidyDF)
 }
