@@ -51,9 +51,9 @@ The above function is call twice: once for reading the train set, and a second t
 
 To finish up, we just have to append the `test` set at the end of the `train` set. The function outputs 2 data.frames:
 
-'**tidyMeasures**': `data.frame`: The final tidy data set embedding both test and test observations for mean and standard deviation values of observed items.
+'**tidyMeasures**': `data.frame` (**10299 obs. of 81 variables**): The final tidy data set embedding both test and test observations for mean and standard deviation values of observed items.
 
-'**avgMeasureByActAndBySubject**': `data.frame`: The expected data set for question Nr. 5 of this assignement. It embeds mean values by activity and subject (individual) for each observed items of interest (mean and std measurements). Values are obtained simply by **melting** and **casting** the former data.frame. This data set is also output in a file named `avgMeasureByActAndBySubject.txt` in the working directory
+'**avgMeasureByActAndBySubject**' (**180 obs. of  81 variables**): `data.frame` : The expected data set for question Nr. 5 of this assignement. It embeds mean values by activity and subject (individual) for each observed items of interest (mean and std measurements). Values are obtained simply by **melting** and **casting** the former data.frame. This data set is also output in a file named `avgMeasureByActAndBySubject.txt` in the working directory
 
 ##Newly created variables
 
