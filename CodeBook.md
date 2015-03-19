@@ -2,7 +2,7 @@
 
 This document explains the steps followed up to obtain the tidy data set as expected by the Coursera **Getting and Cleaning Data** course assignement. Assumption is made that the reader has full knownledge of the provided data and the meaning of every variables: Lone newly created varaible will therefore be described in this document.
 
-**Important note:** Since this script does not create any new variable into the provided dataset, reader is strongly encourage to strongly encouraged to check the README.txt file provided within the zip package (see next section) should she needs information about the treated variables unit of measure and their respective representation.  
+**Important note:** Since this script does not create any new variable other than the 2 variables metionned section labeled "Newly created variable" (at the end of this document) , the reader is strongly encouraged to check the README.txt file (provided within the zip package (see next section)) should she needs information about the treated variables unit of measure and their respective representation.  
 
 
 ##Design strategy
